@@ -1,10 +1,6 @@
 var config = {
-    local: {
-        mode: 'local',
-        port: 3000
-    },
-    staging: {
-        mode: 'staging',
+    development: {
+        mode: 'development',
         port: 3000
     },
     production: {
@@ -13,5 +9,5 @@ var config = {
     }
 }
 module.exports = function(mode) {
-    return config[mode || process.argv[2] || 'local'] || config.local;
+    return config[mode || process.argv[2] || 'development'] || config.development;
 }
