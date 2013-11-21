@@ -4,21 +4,23 @@
 
 var mongoose = require('mongoose')
 var LocalStrategy = require('passport-local').Strategy;
-var FacebookStrategy = require('passport-facebook').Strategy;
+//var FacebookStrategy = require('passport-facebook').Strategy;
 
 var localUserSchema = new mongoose.Schema({
-username: String,
+email: String,
 salt: String,
 hash: String
 });
 var Users = mongoose.model('userauths', localUserSchema);
 
+/*
 var FacebookUserSchema = new mongoose.Schema({
     fbId: String,
     email: { type : String , lowercase : true},
-    name : String
+    name : String,
+	token:String
 });
-var FbUsers = mongoose.model('fbs',FacebookUserSchema);
+var FbUsers = mongoose.model('fbs',FacebookUserSchema);*/
 /**
  * Expose
  */
@@ -26,11 +28,11 @@ var FbUsers = mongoose.model('fbs',FacebookUserSchema);
 module.exports = function (passport, config) {
 	var provider = config.provider;
 	// Local strategy
-	passport.use(new LocalStrategy(function(username, password,done){
-		Users.findOne({ username : username},function(err,user){
+	passport.use(new LocalStrategy(function(email, password,done){
+		Users.findOne({ email : email},function(err,user){
 			if(err) { return done(err); }
 			if(!user){
-				return done(null, false, { message: 'Incorrect username.' });
+				return done(null, false, { message: 'Incorrect email.' });
 			}
 
 			hash( password, user.salt, function (err, hash) {
@@ -41,6 +43,7 @@ module.exports = function (passport, config) {
 		});
 	}));
 	
+	/*
 	// Facebook strategy
 	passport.use(new FacebookStrategy({
 		clientID: provider.facebook.id,
@@ -55,7 +58,8 @@ module.exports = function (passport, config) {
 				var newUser = new FbUsers({
 					fbId : profile.id ,
 					email : profile.emails[0].value,
-					name : profile.displayName
+					name : profile.displayName,
+					token: accessToken
 				}).save(function(err,newUser){
 					if(err) throw err;
 					done(null, newUser);
@@ -63,7 +67,7 @@ module.exports = function (passport, config) {
 			}
 		});
 	  }
-	));
+	));*/
 	
 	passport.serializeUser(function(user, done) {
 		done(null, user.id);
@@ -71,16 +75,9 @@ module.exports = function (passport, config) {
 
 	// TODO: add more auth
 	passport.deserializeUser(function(id, done) {
-		FbUsers.findById(id,function(err,user){
+		Users.findById(id, function(err,user){
 			if(err) done(err);
-			if(user){
-				done(null,user);
-			}else{
-				Users.findById(id, function(err,user){
-					if(err) done(err);
-					done(null,user);
-				});
-			}
+			done(null,user);
 		});
 	});
 }
