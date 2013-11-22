@@ -10,7 +10,7 @@ var environment = {
     },
     production: {
         mode: 'production',
-        port: 3000,
+        port: 80,
 		root: rootPath,
 		db: 'mongodb://localhost/wowcheer'
     }
