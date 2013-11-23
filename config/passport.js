@@ -1,19 +1,12 @@
 /*!
  * Module dependencies.
  */
-
 var mongoose = require('mongoose')
 var LocalStrategy = require('passport-local').Strategy;
 var QQStrategy= require('passport-qq').Strategy;
 var WeiboStrategy = require('passport-weibo').Strategy;
+var User = mongoose.model('User');
 
-var localUserSchema = new mongoose.Schema({
-	email: String,
-	salt: String,
-	hash: String
-});
-
-var Users = mongoose.model('userauths', localUserSchema);
 
 var compilePath = function(provider, callbackPath) {
 	var patt=/:provider/g;
@@ -28,20 +21,13 @@ module.exports = function (app,passport, config) {
 	var callback = provider.callback[env];
 	
 	// Local strategy
-	passport.use(new LocalStrategy(function(email, password,done){
-		Users.findOne({ email : email},function(err,user){
-			if(err) { return done(err); }
-			if(!user){
-				return done(null, false, { message: 'Incorrect email.' });
-			}
-
-			hash( password, user.salt, function (err, hash) {
-				if (err) { return done(err); }
-				if (hash == user.hash) return done(null, user);
-				done(null, false, { message: 'Incorrect password.' });
-			});
-		});
-	}));
+	passport.use(new LocalStrategy({
+		usernameField: 'email',
+		passwordField: 'password'
+    },
+    function(email, password, done) {
+    	User.isValidUserPassword(email, password, done);
+    }));
 	
 	// Weibo strategy
 	var weiboCallback = compilePath("weibo",callback);
@@ -79,9 +65,9 @@ module.exports = function (app,passport, config) {
 	});
 
 	passport.deserializeUser(function(id, done) {
-		Users.findById(id, function(err,user){
-			if(err) done(err);
-			done(null,user);
+		User.findOne({ _id: id }, function (err, user) {
+			done(err, user);
 		});
 	});
+	
 }
