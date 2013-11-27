@@ -34,9 +34,9 @@ module.exports = function (app,passport, config) {
 		usernameField: 'email',
 		passwordField: 'password'
    	 	},
-    		function(email, password, done) {
+    	function(email, password, done) {
     			User.isValidUserPassword(email, password, done);
-    	}));
+    }));
 	
 	// Weibo strategy
 	var weiboCallback = compilePath("weibo",callback);
