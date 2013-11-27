@@ -3,8 +3,8 @@
 */
 var provider = {
 	callback: {
-		production:"http://jiaojingping/auth/:provider/callback",
-		development:"http://127.0.0.1:3000/auth/:provider/callback"
+		production:"http://jiaojingping.com/auth/:provider/callback",
+		development:"http://127.0.0.1:3000/auth/:provider/callback" //qq and weibo do not support local auth
 	},
 	facebook:{
 		id:'1424579641099411',

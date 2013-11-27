@@ -14,7 +14,7 @@ var environment = {
         mode: 'production',
         port: 80,
 		root: rootPath,
-		db: 'mongodb://localhost/wowcheer'
+		db: 'mongodb://localhost/wowcheer',
 		dbConfig:{
 			user: 'root',
 			pass: 'wowcheer'
