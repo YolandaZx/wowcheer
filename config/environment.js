@@ -6,13 +6,19 @@ var environment = {
         mode: 'development',
         port: 3000,
 		root: rootPath,
-		db: 'mongodb://localhost/wowcheer'
+		db: 'mongodb://localhost/wowcheer',
+		dbConfig:{
+		}
     },
     production: {
         mode: 'production',
         port: 80,
 		root: rootPath,
-		db: 'mongodb://localhost/wowcheer'
+		db: 'mongodb://localhost/wowcheer',
+		dbConfig:{
+			user: 'root',
+			pass: 'wowcheer'
+		}
     }
 }
 module.exports = function(mode) {

@@ -7,6 +7,15 @@ var QQStrategy= require('passport-qq').Strategy;
 var WeiboStrategy = require('passport-weibo').Strategy;
 var User = mongoose.model('User');
 
+AuthSchema = mongoose.Schema({
+	id:mongoose.Schema.Types.ObjectId,
+	provider:String,
+	accessToken:String,
+	refreshToken:String,
+	profile:mongoose.Schema.Types.Mixed,
+	createdAt:{type:Date,default:Date.now}
+});
+Auth = mongoose.model("Auth",AuthSchema);
 
 var compilePath = function(provider, callbackPath) {
 	var patt=/:provider/g;
@@ -24,9 +33,9 @@ module.exports = function (app,passport, config) {
 	passport.use(new LocalStrategy({
 		usernameField: 'email',
 		passwordField: 'password'
-    },
-    function(email, password, done) {
-    	User.isValidUserPassword(email, password, done);
+   	 	},
+    	function(email, password, done) {
+    			User.isValidUserPassword(email, password, done);
     }));
 	
 	// Weibo strategy
@@ -54,6 +63,7 @@ module.exports = function (app,passport, config) {
 		callbackURL: qqCallback
 	  },
 	  function(accessToken, refreshToken, profile, done) {
+		console.log("AccessToken:" + accessToken + " refreshToken" + refreshToken + "profile" + profile);
 		User.findOrCreate({ qqId: profile.id }, function (err, user) {
 		  return done(err, user);
 		});
