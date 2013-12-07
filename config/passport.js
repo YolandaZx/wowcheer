@@ -5,8 +5,35 @@ var mongoose = require('mongoose')
 var LocalStrategy = require('passport-local').Strategy;
 var QQStrategy= require('passport-qq').Strategy;
 var WeiboStrategy = require('passport-weibo').Strategy;
-var User = mongoose.model('User');
+var Users = mongoose.model('User');
+var Auths = mongoose.model('Auth');
 
+/*Check whether current user who login through external provider is registered already, 
+   return user if already connected, else return null*/
+var isConnectedProvider = function(provider_id, provider,callback) {
+   var q = Auths.findOne({provider_id:provider_id,provider:provider});
+   q.exec(function(err, providerUser){
+     if (err) throw err;
+     if (providerUser._id) { // already connected
+       Users.findOne({email:providerUser._id},function(err,user){
+        if (err) throw err;
+        callback(user);
+       }); 
+     } else { //not linked yet
+        callback(null);
+     }
+   })
+} 
+
+
+/*Connect user with a provider*/
+var connectProvider = function(user,provider,provider_id,callback) {
+
+}
+/*Disconnect user with a provider*/
+var disconnectProvider = function(user,provider,provider_id,callback) {
+
+}
 
 
 var compilePath = function(provider, callbackPath) {
@@ -55,10 +82,20 @@ module.exports = function (app,passport, config) {
 		callbackURL: qqCallback
 	  },
 	  function(accessToken, refreshToken, profile, done) {
-		console.log("AccessToken:" + accessToken + " refreshToken" + refreshToken + "profile" + profile);
-		User.findOrCreate({ qqId: profile.id }, function (err, user) {
-		  return done(err, user);
-		});
+      console.log("AccessToken:" + accessToken + " refreshToken" + refreshToken + "profile" + profile);
+      Auths.findOne({provider:"QQ",provider_id:profile.id},function(err, providerUser){
+        if (err) throw err;
+        var data = {provider:"QQ",provider_id:profile.id,accessToken:accessToken,refreshToken:refreshToken,profile:profile};
+        if (!providerUser) { //create
+          Auths.save(data,function(err,providerUser){
+            done(err, providerUser)
+          });
+        } else {
+          Auths.update(data,function(err,providerUser){
+            done(err, providerUser)
+          });
+        }
+      })
 	  }
 	));
 	
