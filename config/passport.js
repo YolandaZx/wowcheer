@@ -7,15 +7,7 @@ var QQStrategy= require('passport-qq').Strategy;
 var WeiboStrategy = require('passport-weibo').Strategy;
 var User = mongoose.model('User');
 
-AuthSchema = mongoose.Schema({
-	id:mongoose.Schema.Types.ObjectId,
-	provider:String,
-	accessToken:String,
-	refreshToken:String,
-	profile:mongoose.Schema.Types.Mixed,
-	createdAt:{type:Date,default:Date.now}
-});
-Auth = mongoose.model("Auth",AuthSchema);
+
 
 var compilePath = function(provider, callbackPath) {
 	var patt=/:provider/g;
