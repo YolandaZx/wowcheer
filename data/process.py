@@ -15,9 +15,9 @@ json_data=open(in_filename)
 list = json.load(json_data)
 count = 1;
 for data in list:
-	imageURL = data[attribute]
-	print("fetching " + imageURL + "...")
 	filename = prefix + str(count) +".png"
+  imageURL = data[attribute]
+	print("fetching " + imageURL + "..."
 	#imageData = urllib.request.urlretrieve(imageURL,filename)
 	data[attribute] = filename
 	data["ticket_prices"] = [100,200,300]
