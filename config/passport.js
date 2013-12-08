@@ -48,7 +48,33 @@ module.exports = function (app,passport, config) {
 	var provider = config.provider;
 	var env = app.get('env');
 	var callback = provider.callback[env];
-	
+  // Varify callback for passport auth for third party provider
+	var varifyCallback = function(accessToken, refreshToken, profile, done) {
+    var provider = profile.provider;
+    console.log(provider + " user is logging in:" + profile.nickname);
+    Providers.findOne({provider:provider,provider_id:profile.id},function(err, providerUser){
+       if (err) throw err;
+       var data = {provider:provider,provider_id:profile.id,accessToken:accessToken,refreshToken:refreshToken,profile:profile};
+       if (!providerUser) { 
+          // if first time using provider login, create a provider user
+          Providers.create(data,function(err,u){
+            done(err, false, {provider:provider,provider_id:profile.id});
+          });
+        } else if (providerUser.user){ 
+          // if this providerUser is linked with local user already, then update the accesstoken and return the localuser
+          providerUser.update(data,function(err,u){
+            Users.findOne({_id:providerUser.user},function(err, user){
+              done(err,user);
+            })
+          });
+        } else {
+          // else update the provider user
+          providerUser.update(data,function(err,u){
+             done(err, false, {provider:provider,provider_id:profile.id});
+          });
+        }
+    })
+  }
 	// Local strategy
 	passport.use(new LocalStrategy({
 		usernameField: 'email',
@@ -67,11 +93,7 @@ module.exports = function (app,passport, config) {
 		clientSecret: provider.weibo.secret,
 		callbackURL: weiboCallback
 	  },
-	  function(accessToken, refreshToken, profile, done) {
-		User.findOrCreate({ weiboId: profile.id }, function (err, user) {
-		  return done(err, user);
-		});
-	  }
+    varifyCallback
 	));
 
 	// QQ strategy
@@ -82,33 +104,7 @@ module.exports = function (app,passport, config) {
 		clientSecret: provider.qq.secret,
 		callbackURL: qqCallback
 	  },
-	  function(accessToken, refreshToken, profile, done) {
-      console.log("QQ User login:" + profile.nickname);
-      Providers.findOne({provider:"QQ",provider_id:profile.id},function(err, providerUser){
-         if (err) throw err;
-         
-         var data = {provider:"QQ",provider_id:profile.id,accessToken:accessToken,refreshToken:refreshToken,profile:profile};
-         
-         if (!providerUser) { 
-            // if first time using provider login, create a provider user
-            Providers.create(data,function(err,u){
-              done(err, false, {provider:"QQ",provider_id:profile.id});
-            });
-          } else if (providerUser.user){ 
-            // if this providerUser is linked with local user already, then update the accesstoken and return the localuser
-            providerUser.update(data,function(err,u){
-              Users.findOne({_id:providerUser.user},function(err, user){
-                done(err,user);
-              })
-            });
-          } else {
-            // else update the provider user
-            providerUser.update(data,function(err,u){
-               done(err, false, {provider:"QQ",provider_id:profile.id});
-            });
-          }
-        })
-	  }
+	  varifyCallback
 	));
 	
 	passport.serializeUser(function(user, done) {
@@ -117,9 +113,9 @@ module.exports = function (app,passport, config) {
 
 	passport.deserializeUser(function(id, done) {
 		Users.findOne({ _id: id }, function (err, user) {
-      
 			done(err, user);
 		});
 	});
 	
 }
+
