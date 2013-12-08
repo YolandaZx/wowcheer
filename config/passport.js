@@ -6,12 +6,13 @@ var LocalStrategy = require('passport-local').Strategy;
 var QQStrategy= require('passport-qq').Strategy;
 var WeiboStrategy = require('passport-weibo').Strategy;
 var Users = mongoose.model('User');
-var Auths = mongoose.model('Auth');
+var Providers = mongoose.model('Auth');
+
 
 /*Check whether current user who login through external provider is registered already, 
    return user if already connected, else return null*/
 var isConnectedProvider = function(provider_id, provider,callback) {
-   var q = Auths.findOne({provider_id:provider_id,provider:provider});
+   var q = Providers.findOne({provider_id:provider_id,provider:provider});
    q.exec(function(err, providerUser){
      if (err) throw err;
      if (providerUser.user) { // already connected
@@ -82,24 +83,31 @@ module.exports = function (app,passport, config) {
 		callbackURL: qqCallback
 	  },
 	  function(accessToken, refreshToken, profile, done) {
-      console.log("AccessToken:" + accessToken + " refreshToken" + refreshToken + "profile" + profile);
-      Auths.findOne({provider:"QQ",provider_id:profile.id},function(err, providerUser){
-        if (err) throw err;
-        var data = {provider:"QQ",provider_id:profile.id,accessToken:accessToken,refreshToken:refreshToken,profile:profile};
-	if (!providerUser) { //create
-	console.log("Creating new user");  
-          Auths.create(data,function(err,u){
-       		if (err) throw err;
-		console.log("created providerUser"+ u.provider_id);
-		done(err, u)
-          });
-        } else {
-          providerUser.update(data,function(err,u){
-	    if (err) throw err;
-            done(err, u)
-          });
-        }
-      })
+      console.log("QQ User login:" + profile.nickname);
+      Providers.findOne({provider:"QQ",provider_id:profile.id},function(err, providerUser){
+         if (err) throw err;
+         
+         var data = {provider:"QQ",provider_id:profile.id,accessToken:accessToken,refreshToken:refreshToken,profile:profile};
+         
+         if (!providerUser) { 
+            // if first time using provider login, create a provider user
+            Providers.create(data,function(err,u){
+              done(err, null, {provider:"QQ",provider:u.provider_id});
+            });
+          } else if (providerUser.user){ 
+            // if this providerUser is linked with local user already, then update the accesstoken and return the localuser
+            providerUser.update(data,function(err,u){
+              Users.findOne({_id:providerUser.user},function(err, user){
+                done(err,user);
+              })
+            });
+          } else {
+            // else update the provider user
+            providerUser.update(data,function(err,u){
+               done(err, null, {provider:"QQ",provider:u.provider_id});
+            });
+          }
+        })
 	  }
 	));
 	
@@ -109,6 +117,7 @@ module.exports = function (app,passport, config) {
 
 	passport.deserializeUser(function(id, done) {
 		Users.findOne({ _id: id }, function (err, user) {
+      
 			done(err, user);
 		});
 	});
