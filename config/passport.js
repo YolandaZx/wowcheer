@@ -14,8 +14,8 @@ var isConnectedProvider = function(provider_id, provider,callback) {
    var q = Auths.findOne({provider_id:provider_id,provider:provider});
    q.exec(function(err, providerUser){
      if (err) throw err;
-     if (providerUser._id) { // already connected
-       Users.findOne({email:providerUser._id},function(err,user){
+     if (providerUser.user) { // already connected
+       Users.findOne({email:providerUser.user},function(err,user){
         if (err) throw err;
         callback(user);
        }); 
@@ -86,13 +86,17 @@ module.exports = function (app,passport, config) {
       Auths.findOne({provider:"QQ",provider_id:profile.id},function(err, providerUser){
         if (err) throw err;
         var data = {provider:"QQ",provider_id:profile.id,accessToken:accessToken,refreshToken:refreshToken,profile:profile};
-        if (!providerUser) { //create
-          Auths.save(data,function(err,providerUser){
-            done(err, providerUser)
+	if (!providerUser) { //create
+	console.log("Creating new user");  
+          Auths.create(data,function(err,u){
+       		if (err) throw err;
+		console.log("created providerUser"+ u.provider_id);
+		done(err, u)
           });
         } else {
-          Auths.update(data,function(err,providerUser){
-            done(err, providerUser)
+          providerUser.update(data,function(err,u){
+	    if (err) throw err;
+            done(err, u)
           });
         }
       })
@@ -104,7 +108,7 @@ module.exports = function (app,passport, config) {
 	});
 
 	passport.deserializeUser(function(id, done) {
-		User.findOne({ _id: id }, function (err, user) {
+		Users.findOne({ _id: id }, function (err, user) {
 			done(err, user);
 		});
 	});
