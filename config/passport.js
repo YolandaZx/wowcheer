@@ -58,7 +58,8 @@ module.exports = function (app,passport, config) {
        if (!providerUser) { 
           // if first time using provider login, create a provider user
           Providers.create(data,function(err,u){
-            done(err, false, {provider:provider,provider_id:profile.id});
+            var hash = u.hash();
+            done(err, false, {provider:provider,provider_id:profile.id,hash:hash});
           });
         } else if (providerUser.user){ 
           // if this providerUser is linked with local user already, then update the accesstoken and return the localuser
@@ -70,7 +71,8 @@ module.exports = function (app,passport, config) {
         } else {
           // else update the provider user
           providerUser.update(data,function(err,u){
-             done(err, false, {provider:provider,provider_id:profile.id});
+             var hash = providerUser.hash();
+             done(err, false, {provider:provider,provider_id:profile.id,hash:hash});
           });
         }
     })
