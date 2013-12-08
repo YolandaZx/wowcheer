@@ -54,7 +54,7 @@ module.exports = function (app,passport, config) {
 		passwordField: 'password'
    	 	},
     	function(email, password, done) {
-    			User.isValidUserPassword(email, password, done);
+    			Users.isValidUserPassword(email, password, done);
     }));
 	
 	// Weibo strategy
@@ -104,7 +104,7 @@ module.exports = function (app,passport, config) {
 	});
 
 	passport.deserializeUser(function(id, done) {
-		User.findOne({ _id: id }, function (err, user) {
+		Users.findOne({ _id: id }, function (err, user) {
 			done(err, user);
 		});
 	});
