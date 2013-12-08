@@ -92,7 +92,7 @@ module.exports = function (app,passport, config) {
          if (!providerUser) { 
             // if first time using provider login, create a provider user
             Providers.create(data,function(err,u){
-              done(err, null, {provider:"QQ",provider:u.provider_id});
+              done(err, false, {provider:"QQ",provider_id:profile.id});
             });
           } else if (providerUser.user){ 
             // if this providerUser is linked with local user already, then update the accesstoken and return the localuser
@@ -104,7 +104,7 @@ module.exports = function (app,passport, config) {
           } else {
             // else update the provider user
             providerUser.update(data,function(err,u){
-               done(err, null, {provider:"QQ",provider:u.provider_id});
+               done(err, false, {provider:"QQ",provider_id:profile.id});
             });
           }
         })
