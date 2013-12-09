@@ -49,7 +49,7 @@ module.exports = function (app,passport, config) {
 	var env = app.get('env');
 	var callback = provider.callback[env];
   // Varify callback for passport auth for third party provider
-	var varifyCallback = function(accessToken, refreshToken, profile, done) {
+	var varifyCallback = function(req,accessToken, refreshToken, profile, done) {
     var provider = profile.provider;
     console.log(provider + " user is logging in:" + profile.nickname);
     Providers.findOne({provider:provider,provider_id:profile.id},function(err, providerUser){
@@ -93,7 +93,8 @@ module.exports = function (app,passport, config) {
 	passport.use(new WeiboStrategy({
 		clientID: provider.weibo.id,
 		clientSecret: provider.weibo.secret,
-		callbackURL: weiboCallback
+		callbackURL: weiboCallback,
+    passReqToCallback: true
 	  },
     varifyCallback
 	));
@@ -104,17 +105,18 @@ module.exports = function (app,passport, config) {
 	passport.use(new QQStrategy({
 		clientID: provider.qq.id,
 		clientSecret: provider.qq.secret,
-		callbackURL: qqCallback
+		callbackURL: qqCallback,
+    passReqToCallback: true
 	  },
 	  varifyCallback
 	));
 	
 	passport.serializeUser(function(user, done) {
-		done(null, user.id);
+		done(null, {id:user._id,username:user.username});
 	});
 
-	passport.deserializeUser(function(id, done) {
-		Users.findOne({ _id: id }, function (err, user) {
+	passport.deserializeUser(function(user, done) {
+		Users.findOne({ _id:user.id, username:user.username}, function (err, user) {
 			done(err, user);
 		});
 	});
